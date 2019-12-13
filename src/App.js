@@ -17,14 +17,11 @@ class App extends Component {
     console.log("this.props.messages test", this.props.messages);
 
     const { messages } = this.props;
-    const list = messages;
-    return (
-      <div>
-        {list.map(message => (
-          <p>{message.text}</p>
-        ))}
-      </div>
-    );
+
+    const list = messages.map(message => (
+      <p key={message.id}>{message.text}</p>
+    ));
+    return <div>{list}</div>;
   }
 }
 
