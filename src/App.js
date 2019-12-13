@@ -1,7 +1,12 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import superagent from "superagent";
 
 class App extends Component {
+  state = {
+    text: ""
+  };
+
   stream = new EventSource("http://localhost:4000/stream");
 
   componentDidMount() {
@@ -13,6 +18,32 @@ class App extends Component {
       this.props.dispatch(action);
     };
   }
+
+  onChange = event => {
+    // const value =  event.target.value
+    // const { value } = event.target // fancy way to do the same - destructuring
+    //the faciest way is nested destructuring:
+    const {
+      target: { value }
+    } = event;
+
+    this.setState({ text: value });
+  };
+
+  reset = () => {
+    this.setState({
+      text: ""
+    });
+  };
+
+  onSubmit = async event => {
+    event.preventDefault();
+    const url = "http://localhost:4000/message";
+    const response = await superagent.post(url).send(this.state);
+    console.log("response test:", response);
+    this.reset();
+  };
+
   render() {
     console.log("this.props.messages test", this.props.messages);
 
@@ -21,7 +52,19 @@ class App extends Component {
     const list = messages.map(message => (
       <p key={message.id}>{message.text}</p>
     ));
-    return <div>{list}</div>;
+    return (
+      <main>
+        <form onSubmit={this.onSubmit}>
+          <input onChange={this.onChange} type="text" value={this.state.text} />
+          <button>Submit</button>{" "}
+          {/* button inside the form submits form by default*/}
+        </form>
+
+        <button onClick={this.reset}>Reset</button>
+
+        {list}
+      </main>
+    );
   }
 }
 
