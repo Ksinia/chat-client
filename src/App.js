@@ -1,13 +1,15 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import superagent from "superagent";
+import LoginFormContainer from "./components/LoginFormContainer";
+import SignupFormContainer from "./components/SignupFormContainer";
 
 class App extends Component {
   state = {
     text: ""
   };
 
-  stream = new EventSource("http://localhost:4000/stream");
+  stream = new EventSource("//localhost:4000/stream");
 
   componentDidMount() {
     // onmessage is a function that will run each time when the mew message comes
@@ -38,30 +40,56 @@ class App extends Component {
 
   onSubmit = async event => {
     event.preventDefault();
-    const url = "http://localhost:4000/message";
-    const response = await superagent.post(url).send(this.state);
-    console.log("response test:", response);
+    const url = "//localhost:4000/message";
+    try {
+      const response = await superagent
+        .post(url)
+        .set("Authorization", `Bearer ${this.props.user.jwt}`)
+        .send({ text: this.state.text, userId: this.props.user.id });
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
     this.reset();
   };
 
   render() {
-    console.log("this.props.messages test", this.props.messages);
-
     const { messages } = this.props;
 
     const list = messages.map(message => (
-      <p key={message.id}>{message.text}</p>
+      <p key={message.id}>
+        {message.user.name}: {message.text}
+      </p>
     ));
     return (
       <main>
-        <form onSubmit={this.onSubmit}>
-          <input onChange={this.onChange} type="text" value={this.state.text} />
-          <button>Submit</button>{" "}
-          {/* button inside the form submits form by default*/}
-        </form>
-
-        <button onClick={this.reset}>Reset</button>
-
+        {this.props.user ? (
+          <p>You are logged in as {this.props.user.name}</p>
+        ) : (
+          <div>
+            <h4>Please log in:</h4>
+            <LoginFormContainer />
+            <h4>Or sign up:</h4>
+            <SignupFormContainer />
+          </div>
+        )}
+        {this.props.user ? (
+          <div>
+            <h4>Send a message:</h4>
+            <form onSubmit={this.onSubmit}>
+              <input
+                onChange={this.onChange}
+                type="text"
+                value={this.state.text}
+              />
+              <button>Submit</button>{" "}
+              {/* button inside the form submits form by default*/}
+            </form>
+            <button onClick={this.reset}>Reset</button>
+          </div>
+        ) : (
+          <p>You can send messages after login</p>
+        )}
         {list}
       </main>
     );
@@ -73,9 +101,16 @@ function mapStateToProps(state) {
   // state is the current data in the redux store
 
   //Each property of the object becomes a props of the component
-  return {
-    messages: state //this.props.messages will be the entire state of the redux store
-  };
+  if (state.user) {
+    return {
+      user: state.user,
+      messages: state.messages //this.props.messages will be the entire state of the redux store
+    };
+  } else {
+    return {
+      messages: state.messages //this.props.messages will be the entire state of the redux store
+    };
+  }
 }
 
 // put data into the store

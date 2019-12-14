@@ -17,3 +17,32 @@
 //     payload: message
 //   };
 // }
+
+import superagent from "superagent";
+
+const baseUrl = "//localhost:4000";
+
+export const login = (name, password) => async dispatch => {
+  const url = `${baseUrl}/login`;
+  try {
+    const response = await superagent.post(url).send({ name, password });
+
+    console.log("response test:", response);
+    const action = JSON.parse(response.text);
+    dispatch(action);
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const signup = (name, password) => async dispatch => {
+  const url = `${baseUrl}/user`;
+  try {
+    const response = await superagent.post(url).send({ name, password });
+
+    console.log("response test:", response);
+    const action = JSON.parse(response.text);
+    dispatch(action);
+  } catch (error) {
+    console.log(error);
+  }
+};
